@@ -1,5 +1,9 @@
 package me.zhengjin.common.attachment.adapter
 
+import cn.hutool.core.codec.Base64
+import cn.hutool.core.util.ZipUtil
+import com.querydsl.core.types.Predicate
+import com.querydsl.core.types.Projections
 import me.zhengjin.common.attachment.controller.vo.AttachmentVO
 import me.zhengjin.common.attachment.controller.vo.MergeDownloadVO
 import me.zhengjin.common.attachment.po.Attachment
@@ -7,10 +11,6 @@ import me.zhengjin.common.attachment.po.AttachmentModelHelper
 import me.zhengjin.common.attachment.po.QAttachment
 import me.zhengjin.common.core.exception.ServiceException
 import me.zhengjin.common.core.jpa.JpaHelper
-import cn.hutool.core.codec.Base64
-import cn.hutool.core.util.ZipUtil
-import com.querydsl.core.types.Predicate
-import com.querydsl.core.types.Projections
 import org.apache.tika.Tika
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.multipart.MultipartFile

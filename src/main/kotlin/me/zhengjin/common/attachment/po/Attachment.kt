@@ -1,9 +1,9 @@
 package me.zhengjin.common.attachment.po
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import me.zhengjin.common.core.entity.BaseEntity
 import me.zhengjin.common.core.exception.ServiceException
 import me.zhengjin.common.core.jpa.comment.annotation.JpaComment
-import com.fasterxml.jackson.annotation.JsonIgnore
 import java.util.concurrent.ConcurrentHashMap
 import javax.persistence.Column
 import javax.persistence.Entity
