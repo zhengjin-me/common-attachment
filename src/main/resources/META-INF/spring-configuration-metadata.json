@@ -1,0 +1,16 @@
+{
+  "properties": [
+    {
+      "name": "customize.common.storage.type",
+      "type": "java.lang.String",
+      "description": "attachment storage type.",
+      "defaultValue": "local"
+    },
+    {
+      "name": "customize.common.storage.local.storagePath",
+      "type": "java.lang.String",
+      "description": "local storage path.",
+      "sourceType": "me.zhengjin.common.attachment.autoconfig.AttachmentLocalFileStorageProperties"
+    }
+  ]
+}
