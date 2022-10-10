@@ -2,7 +2,9 @@ package me.zhengjin.common.attachment.adapter
 
 import cn.hutool.core.io.IoUtil
 import me.zhengjin.common.attachment.po.Attachment
+import me.zhengjin.common.attachment.po.QAttachment
 import me.zhengjin.common.attachment.repository.AttachmentRepository
+import me.zhengjin.common.core.jpa.JpaHelper
 import java.io.FileNotFoundException
 import java.io.InputStream
 import java.net.URLEncoder
@@ -10,7 +12,6 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import javax.persistence.criteria.Predicate
 import javax.servlet.http.HttpServletResponse
 
 /**
@@ -21,6 +22,7 @@ abstract class AttachmentStorageAdapter(
 ) : AttachmentStorage {
 
     private val dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd")!!
+    private val attachmentDomain = QAttachment.attachment
 
     /**
      * 生成时间格式的目录
@@ -31,8 +33,8 @@ abstract class AttachmentStorageAdapter(
     /**
      * 追加附件
      */
-    override fun append(ids: List<String>?, pkId: String) {
-        if (ids == null || ids.isEmpty()) {
+    override fun append(ids: List<Long>, pkId: Long) {
+        if (ids.isEmpty()) {
             return
         }
         val attachments = attachmentRepository.findAllById(ids)
@@ -45,25 +47,26 @@ abstract class AttachmentStorageAdapter(
      */
     override fun bindPkId(
         module: String,
-        ids: List<String>?,
-        pkId: String,
+        ids: List<Long>,
+        pkId: Long,
         readOnly: Boolean,
         vararg businessTypeCode: String
     ) {
-        val oldAttachments = selectFileList(module, pkId.toString(), readOnly, *businessTypeCode)
+        if (ids.isEmpty()) {
+            return
+        }
+        val oldAttachments = selectFileList(module, pkId, readOnly, *businessTypeCode)
         oldAttachments.forEach { it.delete = true }
         attachmentRepository.saveAll(oldAttachments)
-        if (!ids.isNullOrEmpty()) {
-            val attachments = attachmentRepository.findAllById(ids)
-            if (attachments.size != ids.size) {
-                throw RuntimeException("Failed to find file, expected " + ids.size + ", actual " + attachments.size)
-            }
-            attachments.forEach {
-                it.pkId = pkId.toString()
-                it.delete = false
-            }
-            attachmentRepository.saveAll(attachments)
+        val attachments = attachmentRepository.findAllById(ids)
+        if (attachments.size != ids.size) {
+            throw RuntimeException("Failed to find file, expected " + ids.size + ", actual " + attachments.size)
         }
+        attachments.forEach {
+            it.pkId = pkId
+            it.delete = false
+        }
+        attachmentRepository.saveAll(attachments)
     }
 
     /**
@@ -71,41 +74,41 @@ abstract class AttachmentStorageAdapter(
      */
     override fun selectFileList(
         module: String,
-        pkId: String,
+        pkId: Long?,
         searchReadOnly: Boolean,
         vararg businessTypeCode: String
     ): List<Attachment> {
-        return attachmentRepository.findAll { r, _, cb ->
-            val list = ArrayList<Predicate>()
-            list.add(cb.equal(r.get<Any>("module"), module))
-            if (pkId.isNotBlank()) {
-                list.add(cb.equal(r.get<Any>("pkId"), pkId.toString()))
-            }
-            if (businessTypeCode.isNotEmpty()) {
-                if (searchReadOnly) {
-                    // 同时查询只读附件
-                    val businessTypeCodeAll = mutableListOf<String>()
-                    businessTypeCode.forEach { businessTypeCodeAll.add("${it}_ReadOnly") }
-                    businessTypeCodeAll.addAll(businessTypeCode)
-                    list.add(r.get<String>("businessTypeCode").`in`(businessTypeCodeAll))
-                } else {
-                    list.add(r.get<String>("businessTypeCode").`in`(*businessTypeCode))
-                }
-            } else {
-                if (!searchReadOnly) {
-                    list.add(cb.notLike(r.get<String>("businessTypeCode"), "%_ReadOnly"))
-                }
-            }
-            list.add(cb.isFalse(r.get("delete")))
-            cb.and(*list.toTypedArray())
+        var condition = attachmentDomain.delete.isFalse
+        condition = condition.and(attachmentDomain.module.eq(module))
+        if (pkId != null) {
+            condition = condition.and(attachmentDomain.pkId.eq(pkId))
         }
+        if (businessTypeCode.isNotEmpty()) {
+            condition = if (searchReadOnly) {
+                // 同时查询只读附件
+                val businessTypeCodeAll = mutableListOf<String>()
+                businessTypeCode.forEach { businessTypeCodeAll.add("${it}_ReadOnly") }
+                businessTypeCodeAll.addAll(businessTypeCode)
+                condition.and(attachmentDomain.businessTypeCode.`in`(businessTypeCodeAll))
+            } else {
+                condition.and(attachmentDomain.businessTypeCode.`in`(*businessTypeCode))
+            }
+        } else {
+            if (!searchReadOnly) {
+                condition = condition.and(attachmentDomain.businessTypeCode.notLike("%_ReadOnly"))
+            }
+        }
+        return JpaHelper.getJPAQueryFactory()
+            .selectFrom(attachmentDomain)
+            .where(condition)
+            .fetch()
     }
 
     /**
      * 批量逻辑删除
      * @param ids 附件id集合
      */
-    override fun deleteBatch(ids: List<String>) {
+    override fun deleteBatch(ids: List<Long>) {
         val attachments = attachmentRepository.findAllById(ids)
         attachments.forEach { it.delete = true }
         attachmentRepository.saveAll(attachments)
@@ -114,13 +117,13 @@ abstract class AttachmentStorageAdapter(
     /**
      * 获取附件信息
      */
-    override fun getAttachment(attachmentId: String): Attachment =
+    override fun getAttachment(attachmentId: Long): Attachment =
         attachmentRepository.findByIdAndDeleteFalse(attachmentId) ?: throw RuntimeException("未找到附件信息")
 
     /**
      * 获取实际文件
      */
-    override fun getAttachmentFileStream(attachmentId: String): InputStream =
+    override fun getAttachmentFileStream(attachmentId: Long): InputStream =
         getAttachmentFileStream(getAttachment(attachmentId))
 
     /**
@@ -129,7 +132,7 @@ abstract class AttachmentStorageAdapter(
      * @param id       附件id
      * @param isDown   true 下载 false 预览
      */
-    override fun download(response: HttpServletResponse, id: String, isDown: Boolean) {
+    override fun download(response: HttpServletResponse, id: Long, isDown: Boolean) {
         val attachmentOptional = attachmentRepository.findById(id)
         val attachment = attachmentOptional.orElseThrow { RuntimeException("File not found") }
         val fileInputStream = getAttachmentFileStream(attachment)

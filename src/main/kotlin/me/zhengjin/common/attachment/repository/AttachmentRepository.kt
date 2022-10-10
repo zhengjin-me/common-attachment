@@ -10,13 +10,13 @@ import me.zhengjin.common.core.repository.BaseRepository
  * @description:
  * @date 2019/4/8 16:48
  */
-interface AttachmentRepository : BaseRepository<Attachment, String> {
+interface AttachmentRepository : BaseRepository<Attachment, Long> {
 
-    fun findByIdAndDeleteFalse(id: String): Attachment?
+    fun findByIdAndDeleteFalse(id: Long): Attachment?
 
-    fun findAllByIdInAndDeleteFalse(ids: List<String>): List<Attachment>
+    fun findAllByIdInAndDeleteFalse(ids: List<Long>): List<Attachment>
 
-    fun findAllByPkIdAndModuleAndDeleteFalse(pkId: String, module: String): List<Attachment>
+    fun findAllByPkIdAndModuleAndDeleteFalse(pkId: Long, module: String): List<Attachment>
 
-    fun findAllByPkIdAndModuleAndBusinessTypeCodeAndDeleteFalse(pkId: String, module: String, businessTypeCode: String): List<Attachment>
+    fun findAllByPkIdAndModuleAndBusinessTypeCodeAndDeleteFalse(pkId: Long, module: String, businessTypeCode: String): List<Attachment>
 }

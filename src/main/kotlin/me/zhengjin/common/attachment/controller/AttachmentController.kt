@@ -4,6 +4,7 @@ import me.zhengjin.common.attachment.adapter.AttachmentStorage
 import me.zhengjin.common.attachment.controller.vo.AttachmentVO
 import me.zhengjin.common.attachment.controller.vo.MergeDownloadVO
 import me.zhengjin.common.attachment.po.AttachmentModelHelper
+import me.zhengjin.common.core.encryptor.annotation.IdDecrypt
 import me.zhengjin.common.core.entity.HttpResult
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.GetMapping
@@ -47,7 +48,7 @@ class AttachmentController(
         @RequestParam("module") module: String,
         @RequestParam("businessTypeCode") businessTypeCode: String,
         @RequestParam("businessTypeName") businessTypeName: String,
-        @RequestParam(value = "pkId", required = false) pkId: String?
+        @IdDecrypt @RequestParam(value = "pkId", required = false) pkId: Long?
     ): HttpResult<AttachmentVO> {
         AttachmentModelHelper.checkRegister(module, businessTypeCode)
         return HttpResult.ok(
@@ -71,7 +72,7 @@ class AttachmentController(
     @GetMapping("/list")
     fun fileList(
         @RequestParam("module") module: String,
-        @RequestParam("pkId") pkId: String,
+        @IdDecrypt @RequestParam("pkId") pkId: Long,
         @RequestParam("readOnly", required = false) readOnly: Boolean?,
         @RequestParam("businessTypeCode", required = false) businessTypeCode: List<String>?,
     ): HttpResult<List<AttachmentVO>> {
@@ -90,7 +91,7 @@ class AttachmentController(
      * 批量删除
      */
     @PostMapping("/delete/batch")
-    fun deleteBatch(@RequestBody ids: List<String>): HttpResult<String> {
+    fun deleteBatch(@IdDecrypt @RequestBody ids: List<Long>): HttpResult<String> {
         attachmentStorage.deleteBatch(ids)
         return HttpResult.ok()
     }
@@ -104,7 +105,7 @@ class AttachmentController(
      */
     @GetMapping("/view/{id}")
     @Throws(IOException::class)
-    fun view(response: HttpServletResponse, @PathVariable("id") id: String) {
+    fun view(response: HttpServletResponse, @IdDecrypt @PathVariable("id") id: Long) {
         attachmentStorage.download(response, id, false)
     }
 
@@ -117,7 +118,7 @@ class AttachmentController(
      */
     @GetMapping("/download/{id}")
     @Throws(IOException::class)
-    fun download(response: HttpServletResponse, @PathVariable("id") id: String) {
+    fun download(response: HttpServletResponse, @IdDecrypt @PathVariable("id") id: Long) {
         attachmentStorage.download(response, id, true)
     }
 
@@ -128,7 +129,7 @@ class AttachmentController(
      * @throws IOException
      */
     @PostMapping("/download/zip")
-    fun mergeDownload(@RequestBody ids: List<String>, response: HttpServletResponse): HttpResult<MergeDownloadVO> {
+    fun mergeDownload(@IdDecrypt @RequestBody ids: List<Long>, response: HttpServletResponse): HttpResult<MergeDownloadVO> {
         return HttpResult.ok(attachmentStorage.mergeDownload(ids, response))
     }
 
@@ -137,9 +138,7 @@ class AttachmentController(
      * @param id
      */
     @GetMapping("/share/{id}")
-    fun share(
-        @PathVariable("id") id: String
-    ): HttpResult<String> {
+    fun share(@IdDecrypt @PathVariable("id") id: Long): HttpResult<String> {
         return HttpResult.ok(body = attachmentStorage.share(id))
     }
 }

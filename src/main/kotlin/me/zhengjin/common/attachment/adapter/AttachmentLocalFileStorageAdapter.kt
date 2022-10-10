@@ -47,7 +47,7 @@ open class AttachmentLocalFileStorageAdapter(
         module: String,
         businessTypeCode: String,
         businessTypeName: String,
-        pkId: String?,
+        pkId: Long?,
         originalFileName: String,
         fileContentType: String,
         fileSize: Long,
@@ -55,7 +55,7 @@ open class AttachmentLocalFileStorageAdapter(
     ): AttachmentVO {
         AttachmentModelHelper.checkRegister(module, businessTypeCode)
         val temp =
-            Objects.requireNonNull<String>(originalFileName).split("\\.".toRegex()).dropLastWhile { it.isEmpty() }
+            Objects.requireNonNull(originalFileName).split("\\.".toRegex()).dropLastWhile { it.isEmpty() }
                 .toTypedArray()
         val dateDir = dateRuleDir()
         val storagePath = Paths.get(attachmentLocalFileStorageProperties.storagePath!!, module, dateDir).toAbsolutePath()
@@ -77,14 +77,14 @@ open class AttachmentLocalFileStorageAdapter(
         attachment.module = module
         attachment.businessTypeCode = if (readOnly) "${businessTypeCode}_ReadOnly" else businessTypeCode
         attachment.businessTypeName = if (readOnly) "$businessTypeName(预览)" else businessTypeName
-        attachment.pkId = if (pkId.isNullOrBlank()) null else pkId.toString()
+        attachment.pkId = pkId
         attachment.fileOriginName = originalFileName
         attachment.fileType = fileContentType
         attachment.filePath =
             String.format("/%s/%s/%s", module, dateDir.replace("\\\\".toRegex(), "/"), fileName)
         attachment.fileSize = fileSize.toString()
         attachment = attachmentRepository.save(attachment)
-        return if (!attachment.id.isNullOrBlank()) {
+        return if (attachment.id != null) {
             AttachmentVO.transform(attachment)
         } else {
             throw RuntimeException("file save failed!")

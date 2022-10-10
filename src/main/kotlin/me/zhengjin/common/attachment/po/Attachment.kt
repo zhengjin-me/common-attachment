@@ -1,6 +1,8 @@
 package me.zhengjin.common.attachment.po
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import me.zhengjin.common.core.encryptor.annotation.IdDecrypt
+import me.zhengjin.common.core.encryptor.annotation.IdEncrypt
 import me.zhengjin.common.core.entity.BaseEntity
 import me.zhengjin.common.core.exception.ServiceException
 import me.zhengjin.common.core.jpa.comment.annotation.JpaComment
@@ -25,10 +27,12 @@ class Attachment : BaseEntity() {
     /**
      * 业务主键
      */
+    @IdEncrypt
+    @IdDecrypt
     @JpaComment("业务主键")
     @JsonIgnore
     @Column
-    var pkId: String? = null
+    var pkId: Long? = null
 
     /**
      * 所属业务单元

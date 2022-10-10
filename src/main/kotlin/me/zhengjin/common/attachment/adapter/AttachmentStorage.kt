@@ -2,7 +2,6 @@ package me.zhengjin.common.attachment.adapter
 
 import cn.hutool.core.codec.Base64
 import cn.hutool.core.util.ZipUtil
-import com.querydsl.core.types.Predicate
 import com.querydsl.core.types.Projections
 import me.zhengjin.common.attachment.controller.vo.AttachmentVO
 import me.zhengjin.common.attachment.controller.vo.MergeDownloadVO
@@ -27,8 +26,8 @@ interface AttachmentStorage {
     @Transactional
     fun bindPkId(
         module: String,
-        id: String,
-        pkId: String,
+        id: Long,
+        pkId: Long,
         readOnly: Boolean = false,
         vararg businessTypeCode: String
     ) =
@@ -40,8 +39,8 @@ interface AttachmentStorage {
     @Transactional
     fun bindPkId(
         module: String,
-        ids: List<String>?,
-        pkId: String,
+        ids: List<Long>,
+        pkId: Long,
         readOnly: Boolean = false,
         vararg businessTypeCode: String
     )
@@ -50,13 +49,13 @@ interface AttachmentStorage {
      * 追加附件
      */
     @Transactional
-    fun append(id: String, pkId: String) = append(listOf(id), pkId)
+    fun append(id: Long, pkId: Long) = append(listOf(id), pkId)
 
     /**
      * 追加附件
      */
     @Transactional
-    fun append(ids: List<String>?, pkId: String)
+    fun append(ids: List<Long>, pkId: Long)
 
     /**
      * 更换绑定业务数据
@@ -64,8 +63,8 @@ interface AttachmentStorage {
     @Transactional
     fun replacePkId(
         module: String,
-        sourcePkId: String,
-        targetPkId: String,
+        sourcePkId: Long,
+        targetPkId: Long,
     ) = bindPkId(module, selectFileIds(module, sourcePkId), targetPkId)
 
     /**
@@ -74,7 +73,7 @@ interface AttachmentStorage {
      */
     fun list(
         module: String,
-        pkId: String,
+        pkId: Long?,
         searchReadOnly: Boolean = false,
         vararg businessTypeCode: String
     ): List<AttachmentVO> {
@@ -82,25 +81,24 @@ interface AttachmentStorage {
             AttachmentModelHelper.checkRegister(module, it)
         }
         val attachmentDomain = QAttachment.attachment
-        val conditions = mutableListOf<Predicate>()
-        conditions.add(attachmentDomain.delete.isFalse)
-        conditions.add(attachmentDomain.module.eq(module))
-        if (pkId.isNotBlank()) {
-            conditions.add(attachmentDomain.pkId.eq(pkId.toString()))
+        var condition = attachmentDomain.delete.isFalse
+        condition = condition.and(attachmentDomain.module.eq(module))
+        if (pkId != null) {
+            condition = condition.and(attachmentDomain.pkId.eq(pkId))
         }
         if (businessTypeCode.isNotEmpty()) {
-            if (searchReadOnly) {
+            condition = if (searchReadOnly) {
                 // 同时查询只读附件
                 val businessTypeCodeAll = mutableListOf<String>()
                 businessTypeCode.forEach { businessTypeCodeAll.add("${it}_ReadOnly") }
                 businessTypeCodeAll.addAll(businessTypeCode)
-                conditions.add(attachmentDomain.businessTypeCode.`in`(businessTypeCodeAll))
+                condition.and(attachmentDomain.businessTypeCode.`in`(businessTypeCodeAll))
             } else {
-                conditions.add(attachmentDomain.businessTypeCode.`in`(*businessTypeCode))
+                condition.and(attachmentDomain.businessTypeCode.`in`(*businessTypeCode))
             }
         } else {
             if (!searchReadOnly) {
-                conditions.add(attachmentDomain.businessTypeCode.notLike("%_ReadOnly"))
+                condition = condition.and(attachmentDomain.businessTypeCode.notLike("%_ReadOnly"))
             }
         }
         return JpaHelper.getJPAQueryFactory()
@@ -120,18 +118,19 @@ interface AttachmentStorage {
                 )
             )
             .from(attachmentDomain)
-            .where(*conditions.toTypedArray())
+            .where(condition)
             .fetch()
     }
 
     /**
      * 对内查询
      * 查询附件列表
+     * 不传pkId时按模块查询
      */
     @Transactional(readOnly = true)
     fun selectFileList(
         module: String,
-        pkId: String,
+        pkId: Long?,
         searchReadOnly: Boolean = false,
         vararg businessTypeCode: String
     ): List<Attachment>
@@ -142,10 +141,10 @@ interface AttachmentStorage {
     @Transactional(readOnly = true)
     fun selectFileIds(
         module: String,
-        pkId: String,
+        pkId: Long,
         searchReadOnly: Boolean = false,
         vararg businessTypeCode: String
-    ): List<String> {
+    ): List<Long> {
         val attachments = selectFileList(module, pkId, searchReadOnly, *businessTypeCode)
         return attachments.map { it.id!! }.toList()
     }
@@ -154,12 +153,12 @@ interface AttachmentStorage {
      * 获取附件信息
      */
     @Transactional(readOnly = true)
-    fun getAttachment(attachmentId: String): Attachment
+    fun getAttachment(attachmentId: Long): Attachment
 
     /**
      * 获取实际文件
      */
-    fun getAttachmentFileStream(attachmentId: String): InputStream
+    fun getAttachmentFileStream(attachmentId: Long): InputStream
 
     /**
      * 获取文件流 无本地存储的文件必须实现此接口!!!!!
@@ -173,7 +172,7 @@ interface AttachmentStorage {
      * @param isDown   true 下载 false 预览
      */
     @Transactional(readOnly = true)
-    fun download(response: HttpServletResponse, id: String, isDown: Boolean)
+    fun download(response: HttpServletResponse, id: Long, isDown: Boolean)
 
     /**
      * 文件下载合并为zip
@@ -181,7 +180,7 @@ interface AttachmentStorage {
      * @param response 响应对象
      */
     @Transactional(readOnly = true)
-    fun mergeDownload(ids: List<String>, response: HttpServletResponse): MergeDownloadVO {
+    fun mergeDownload(ids: List<Long>, response: HttpServletResponse): MergeDownloadVO {
         ServiceException.requireNotNullOrEmpty(ids) { "attachment ids is empty!" }
         val attachments = ids.distinct().map { getAttachment(it) }
         val fileNames = arrayOfNulls<String>(attachments.size)
@@ -200,14 +199,14 @@ interface AttachmentStorage {
      * @param ids 附件id集合
      */
     @Transactional
-    fun deleteBatch(ids: List<String>)
+    fun deleteBatch(ids: List<Long>)
 
     /**
      * 文件分享
      * 生成下载外链
      */
     @Transactional(readOnly = true)
-    fun share(attachmentId: String): String {
+    fun share(attachmentId: Long): String {
         TODO("Not yet implemented")
     }
 
@@ -226,7 +225,7 @@ interface AttachmentStorage {
         module: String,
         businessTypeCode: String,
         businessTypeName: String,
-        pkId: String? = null,
+        pkId: Long? = null,
         readOnly: Boolean = false
     ): AttachmentVO = file.inputStream.use {
         saveFiles(
@@ -257,7 +256,7 @@ interface AttachmentStorage {
         module: String,
         businessTypeCode: String,
         businessTypeName: String,
-        pkId: String? = null,
+        pkId: Long? = null,
         readOnly: Boolean = false
     ): AttachmentVO = srcFile.inputStream().use {
         saveFiles(
@@ -291,7 +290,7 @@ interface AttachmentStorage {
         module: String,
         businessTypeCode: String,
         businessTypeName: String,
-        pkId: String? = null,
+        pkId: Long? = null,
         originalFileName: String,
         fileContentType: String,
         fileSize: Long,
