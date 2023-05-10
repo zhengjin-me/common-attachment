@@ -2,7 +2,10 @@ package me.zhengjin.common.attachment.controller
 
 import me.zhengjin.common.attachment.adapter.AttachmentStorage
 import me.zhengjin.common.attachment.controller.vo.AttachmentVO
+import me.zhengjin.common.attachment.controller.vo.CompleteMultipartUploadRequestVO
 import me.zhengjin.common.attachment.controller.vo.MergeDownloadVO
+import me.zhengjin.common.attachment.controller.vo.MultipartUploadCreateRequestVO
+import me.zhengjin.common.attachment.controller.vo.MultipartUploadCreateResponseVO
 import me.zhengjin.common.attachment.po.AttachmentModelHelper
 import me.zhengjin.common.core.encryptor.annotation.IdDecrypt
 import me.zhengjin.common.core.entity.HttpResult
@@ -60,6 +63,23 @@ class AttachmentController(
                 pkId
             )
         )
+    }
+
+    /**
+     * 创建分片上传
+     */
+    @PostMapping("/file/multipart/create")
+    fun createMultipartUpload(@RequestBody vo: MultipartUploadCreateRequestVO): HttpResult<MultipartUploadCreateResponseVO> {
+        return HttpResult.ok(attachmentStorage.createMultipartUpload(vo))
+    }
+
+    /**
+     * 合并分片数据
+     */
+    @PostMapping("/file/multipart/complete")
+    fun completeMultipartUpload(@RequestBody vo: CompleteMultipartUploadRequestVO): HttpResult<String> {
+        attachmentStorage.completeMultipartUpload(vo)
+        return HttpResult.ok()
     }
 
     /**
@@ -129,7 +149,10 @@ class AttachmentController(
      * @throws IOException
      */
     @PostMapping("/download/zip")
-    fun mergeDownload(@IdDecrypt @RequestBody ids: List<Long>, response: HttpServletResponse): HttpResult<MergeDownloadVO> {
+    fun mergeDownload(
+        @IdDecrypt @RequestBody ids: List<Long>,
+        response: HttpServletResponse
+    ): HttpResult<MergeDownloadVO> {
         return HttpResult.ok(attachmentStorage.mergeDownload(ids, response))
     }
 

@@ -4,7 +4,10 @@ import cn.hutool.core.codec.Base64
 import cn.hutool.core.util.ZipUtil
 import com.querydsl.core.types.Projections
 import me.zhengjin.common.attachment.controller.vo.AttachmentVO
+import me.zhengjin.common.attachment.controller.vo.CompleteMultipartUploadRequestVO
 import me.zhengjin.common.attachment.controller.vo.MergeDownloadVO
+import me.zhengjin.common.attachment.controller.vo.MultipartUploadCreateRequestVO
+import me.zhengjin.common.attachment.controller.vo.MultipartUploadCreateResponseVO
 import me.zhengjin.common.attachment.po.Attachment
 import me.zhengjin.common.attachment.po.AttachmentModelHelper
 import me.zhengjin.common.attachment.po.QAttachment
@@ -19,6 +22,31 @@ import java.io.InputStream
 import javax.servlet.http.HttpServletResponse
 
 interface AttachmentStorage {
+
+    /**
+     * 创建分片上传
+     *
+     * @return 分片上传地址1小时内有效
+     */
+    fun createMultipartUpload(vo: MultipartUploadCreateRequestVO): MultipartUploadCreateResponseVO {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 合并分片数据
+     */
+    fun completeMultipartUpload(vo: CompleteMultipartUploadRequestVO) {
+        TODO("Not yet implemented")
+    }
+
+    /**
+     * 文件分享
+     * 生成下载外链
+     */
+    @Transactional(readOnly = true)
+    fun share(attachmentId: Long): String {
+        TODO("Not yet implemented")
+    }
 
     /**
      * 绑定业务数据
@@ -189,9 +217,10 @@ interface AttachmentStorage {
             fileNames[i] = attachment.fileOriginName
             files[i] = getAttachmentFileStream(attachment)
         }
-        val baos = ByteArrayOutputStream()
-        ZipUtil.zip(baos, fileNames, files)
-        return MergeDownloadVO(filename = "${System.nanoTime()}.zip", content = Base64.encode(baos.toByteArray()))
+        ByteArrayOutputStream().use {
+            ZipUtil.zip(it, fileNames, files)
+            return MergeDownloadVO(filename = "${System.nanoTime()}.zip", content = Base64.encode(it.toByteArray()))
+        }
     }
 
     /**
@@ -200,15 +229,6 @@ interface AttachmentStorage {
      */
     @Transactional
     fun deleteBatch(ids: List<Long>)
-
-    /**
-     * 文件分享
-     * 生成下载外链
-     */
-    @Transactional(readOnly = true)
-    fun share(attachmentId: Long): String {
-        TODO("Not yet implemented")
-    }
 
     /**
      * 附件存储(MultipartFile处理流程)
