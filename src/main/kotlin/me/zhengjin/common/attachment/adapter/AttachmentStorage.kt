@@ -35,7 +35,7 @@ interface AttachmentStorage {
     /**
      * 合并分片数据
      */
-    fun completeMultipartUpload(vo: CompleteMultipartUploadRequestVO) {
+    fun completeMultipartUpload(vo: CompleteMultipartUploadRequestVO): AttachmentVO {
         TODO("Not yet implemented")
     }
 

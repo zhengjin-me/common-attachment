@@ -77,9 +77,8 @@ class AttachmentController(
      * 合并分片数据
      */
     @PostMapping("/file/multipart/complete")
-    fun completeMultipartUpload(@RequestBody vo: CompleteMultipartUploadRequestVO): HttpResult<String> {
-        attachmentStorage.completeMultipartUpload(vo)
-        return HttpResult.ok()
+    fun completeMultipartUpload(@RequestBody vo: CompleteMultipartUploadRequestVO): HttpResult<AttachmentVO> {
+        return HttpResult.ok(attachmentStorage.completeMultipartUpload(vo))
     }
 
     /**
