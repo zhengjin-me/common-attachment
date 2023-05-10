@@ -22,8 +22,7 @@ import javax.persistence.Table
 @Entity
 @Table(name = "pub_attachment")
 @JpaComment("公共附件")
-class Attachment : BaseEntity() {
-
+data class Attachment(
     /**
      * 业务主键
      */
@@ -32,7 +31,7 @@ class Attachment : BaseEntity() {
     @JpaComment("业务主键")
     @JsonIgnore
     @Column
-    var pkId: Long? = null
+    var pkId: Long? = null,
 
     /**
      * 所属业务单元
@@ -40,25 +39,25 @@ class Attachment : BaseEntity() {
     @JpaComment("所属业务单元")
     @JsonIgnore
     @Column
-    var module: String? = null
+    var module: String? = null,
 
     /**
      * 业务类型
      */
     @JpaComment("业务类型代码")
     @Column
-    var businessTypeCode: String? = null
+    var businessTypeCode: String? = null,
 
     @JpaComment("业务类型名称")
     @Column
-    var businessTypeName: String? = null
+    var businessTypeName: String? = null,
 
     /**
      * 原始文件名
      */
     @JpaComment("原始文件名")
     @Column
-    var fileOriginName: String? = null
+    var fileOriginName: String? = null,
 
     /**
      * 资源服务器文件相对路径
@@ -66,21 +65,21 @@ class Attachment : BaseEntity() {
     @JpaComment("资源服务器文件相对路径")
     @JsonIgnore
     @Column
-    var filePath: String? = null
+    var filePath: String? = null,
 
     /**
      * 文件类型 mimeType
      */
     @JpaComment("文件类型 mimeType")
     @Column
-    var fileType: String? = null
+    var fileType: String? = null,
 
     /**
      * 文件大小 单位 字节
      */
     @JpaComment("文件大小 单位 字节")
     @Column
-    var fileSize: String? = null
+    var fileSize: Long? = null,
 
     /**
      * 是否只读
@@ -89,8 +88,8 @@ class Attachment : BaseEntity() {
     @JpaComment("是否只读")
     @JsonIgnore
     @Column
-    var readOnly: Boolean = false
-}
+    var readOnly: Boolean = false,
+) : BaseEntity()
 
 /**
  * 这里是附件所属的模块信息

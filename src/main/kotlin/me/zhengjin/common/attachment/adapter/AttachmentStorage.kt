@@ -316,4 +316,17 @@ interface AttachmentStorage {
         fileSize: Long,
         readOnly: Boolean = false
     ): AttachmentVO
+
+    @Transactional
+    fun save(
+        readOnly: Boolean,
+        module: String,
+        businessTypeCode: String,
+        businessTypeName: String,
+        pkId: Long?,
+        fileOriginName: String,
+        fileType: String,
+        filePath: String,
+        fileSize: Long,
+    ): AttachmentVO
 }

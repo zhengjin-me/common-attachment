@@ -36,7 +36,7 @@ class AttachmentVO : IdEntity() {
     /**
      * 文件大小 单位 字节
      */
-    var fileSize: String? = null
+    var fileSize: Long? = null
 
     /**
      * 是否只读

@@ -1,6 +1,7 @@
 package me.zhengjin.common.attachment.adapter
 
 import cn.hutool.core.io.IoUtil
+import me.zhengjin.common.attachment.controller.vo.AttachmentVO
 import me.zhengjin.common.attachment.po.Attachment
 import me.zhengjin.common.attachment.po.QAttachment
 import me.zhengjin.common.attachment.repository.AttachmentRepository
@@ -148,6 +149,36 @@ abstract class AttachmentStorageAdapter(
             fileInputStream.use { fis -> IoUtil.copy(fis, response.outputStream) }
         } catch (e: FileNotFoundException) {
             throw RuntimeException("File not found")
+        }
+    }
+
+    override fun save(
+        readOnly: Boolean,
+        module: String,
+        businessTypeCode: String,
+        businessTypeName: String,
+        pkId: Long?,
+        fileOriginName: String,
+        fileType: String,
+        filePath: String,
+        fileSize: Long
+    ): AttachmentVO {
+        var attachment = Attachment(
+            readOnly = readOnly,
+            module = module,
+            businessTypeCode = if (readOnly) "${businessTypeCode}_ReadOnly" else businessTypeCode,
+            businessTypeName = if (readOnly) "$businessTypeName(预览)" else businessTypeName,
+            pkId = pkId,
+            fileOriginName = fileOriginName,
+            fileType = fileType,
+            filePath = filePath,
+            fileSize = fileSize,
+        )
+        attachment = attachmentRepository.save(attachment)
+        return if (attachment.id != null) {
+            AttachmentVO.transform(attachment)
+        } else {
+            throw RuntimeException("file save failed!")
         }
     }
 }

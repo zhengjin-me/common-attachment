@@ -21,5 +21,5 @@ class MultipartUploadCreateRequestVO {
 
     @NotEmpty(message = "业务类型名称不能为空")
     var businessTypeName: String? = null
-    var pkId: String? = null
+    var pkId: Long? = null
 }

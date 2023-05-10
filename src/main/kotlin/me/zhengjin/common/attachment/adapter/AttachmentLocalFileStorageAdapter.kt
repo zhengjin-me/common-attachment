@@ -58,7 +58,8 @@ open class AttachmentLocalFileStorageAdapter(
             Objects.requireNonNull(originalFileName).split("\\.".toRegex()).dropLastWhile { it.isEmpty() }
                 .toTypedArray()
         val dateDir = dateRuleDir()
-        val storagePath = Paths.get(attachmentLocalFileStorageProperties.storagePath!!, module, dateDir).toAbsolutePath()
+        val storagePath =
+            Paths.get(attachmentLocalFileStorageProperties.storagePath!!, module, dateDir).toAbsolutePath()
         if (!storagePath.toFile().exists() && !storagePath.toFile().mkdirs()) {
             throw RuntimeException(
                 String.format(
@@ -72,22 +73,16 @@ open class AttachmentLocalFileStorageAdapter(
         // 自动关闭流
         FileUtil.writeFromStream(file, Paths.get(storagePath.toString(), fileName).toFile())
 
-        var attachment = Attachment()
-        if (readOnly) attachment.readOnly = true
-        attachment.module = module
-        attachment.businessTypeCode = if (readOnly) "${businessTypeCode}_ReadOnly" else businessTypeCode
-        attachment.businessTypeName = if (readOnly) "$businessTypeName(预览)" else businessTypeName
-        attachment.pkId = pkId
-        attachment.fileOriginName = originalFileName
-        attachment.fileType = fileContentType
-        attachment.filePath =
-            String.format("/%s/%s/%s", module, dateDir.replace("\\\\".toRegex(), "/"), fileName)
-        attachment.fileSize = fileSize.toString()
-        attachment = attachmentRepository.save(attachment)
-        return if (attachment.id != null) {
-            AttachmentVO.transform(attachment)
-        } else {
-            throw RuntimeException("file save failed!")
-        }
+        return super.save(
+            readOnly = readOnly,
+            module = module,
+            businessTypeCode = businessTypeCode,
+            businessTypeName = businessTypeName,
+            pkId = pkId,
+            fileOriginName = originalFileName,
+            fileType = fileContentType,
+            filePath = String.format("/%s/%s/%s", module, dateDir.replace("\\\\".toRegex(), "/"), fileName),
+            fileSize = fileSize
+        )
     }
 }
