@@ -9,11 +9,4 @@ class MultipartUploadCreateRequestVO {
     var fileName: String? = null
     // 分片数量
     var chunkSize: Int? = null
-    // 只读!!!文件存储地址
-    val filePath: String
-        get() = String.format(
-            "%s/%s",
-            DateTimeFormatter.ofPattern("yyyy/MM/dd", Locale.CHINA).format(LocalDateTime.now()),
-            fileName
-        )
 }

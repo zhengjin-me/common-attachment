@@ -5,6 +5,8 @@ import java.util.LinkedList
 class MultipartUploadCreateResponseVO {
     // 分片ID
     var uploadId: String? = null
+    // 文件名称
+    var fileName: String? = null
     // 分片数量
     var chunks: MutableList<UploadPartItem> = LinkedList()
 
