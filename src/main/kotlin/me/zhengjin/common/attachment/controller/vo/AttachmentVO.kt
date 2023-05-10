@@ -44,6 +44,12 @@ class AttachmentVO : IdEntity() {
      */
     var readOnly: Boolean = false
 
+    /**
+     * 下载地址
+     * 根据具体存储实现视情况返回, 例如本地存储则为空
+     */
+    var url: String? = null
+
     companion object {
         fun transform(attachment: Attachment): AttachmentVO {
             val vo = AttachmentVO()
