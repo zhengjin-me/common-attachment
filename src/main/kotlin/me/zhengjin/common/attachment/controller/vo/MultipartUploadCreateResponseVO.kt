@@ -6,7 +6,7 @@ class MultipartUploadCreateResponseVO {
     // 分片ID
     var uploadId: String? = null
     // 分片数量
-    var chunks: List<UploadPartItem> = LinkedList()
+    var chunks: MutableList<UploadPartItem> = LinkedList()
 
     class UploadPartItem {
         var partNo: Int? = null
