@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
 import java.io.IOException
 import javax.servlet.http.HttpServletResponse
+import javax.validation.Valid
 
 /**
  * @version V1.0
@@ -69,7 +70,7 @@ class AttachmentController(
      * 创建分片上传
      */
     @PostMapping("/file/multipart/create")
-    fun createMultipartUpload(@RequestBody vo: MultipartUploadCreateRequestVO): HttpResult<MultipartUploadCreateResponseVO> {
+    fun createMultipartUpload(@RequestBody @Valid vo: MultipartUploadCreateRequestVO): HttpResult<MultipartUploadCreateResponseVO> {
         return HttpResult.ok(attachmentStorage.createMultipartUpload(vo))
     }
 
@@ -77,7 +78,7 @@ class AttachmentController(
      * 合并分片数据
      */
     @PostMapping("/file/multipart/complete")
-    fun completeMultipartUpload(@RequestBody vo: CompleteMultipartUploadRequestVO): HttpResult<AttachmentVO> {
+    fun completeMultipartUpload(@RequestBody @Valid vo: CompleteMultipartUploadRequestVO): HttpResult<AttachmentVO> {
         return HttpResult.ok(attachmentStorage.completeMultipartUpload(vo))
     }
 
