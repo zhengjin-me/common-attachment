@@ -6,6 +6,7 @@ import me.zhengjin.common.attachment.po.Attachment
 import me.zhengjin.common.attachment.po.QAttachment
 import me.zhengjin.common.attachment.repository.AttachmentRepository
 import me.zhengjin.common.core.jpa.JpaHelper
+import org.springframework.transaction.annotation.Transactional
 import java.io.FileNotFoundException
 import java.io.InputStream
 import java.net.URLEncoder
@@ -34,6 +35,7 @@ abstract class AttachmentStorageAdapter(
     /**
      * 追加附件
      */
+    @Transactional
     override fun append(ids: List<Long>, pkId: Long) {
         if (ids.isEmpty()) {
             return
@@ -46,6 +48,7 @@ abstract class AttachmentStorageAdapter(
     /**
      * 绑定业务数据
      */
+    @Transactional
     override fun bindPkId(
         module: String,
         ids: List<Long>,
@@ -73,6 +76,7 @@ abstract class AttachmentStorageAdapter(
     /**
      * 查询附件列表
      */
+    @Transactional(readOnly = true)
     override fun selectFileList(
         module: String,
         pkId: Long?,
@@ -109,6 +113,7 @@ abstract class AttachmentStorageAdapter(
      * 批量逻辑删除
      * @param ids 附件id集合
      */
+    @Transactional
     override fun deleteBatch(ids: List<Long>) {
         val attachments = attachmentRepository.findAllById(ids)
         attachments.forEach { it.delete = true }
@@ -118,12 +123,14 @@ abstract class AttachmentStorageAdapter(
     /**
      * 获取附件信息
      */
+    @Transactional(readOnly = true)
     override fun getAttachment(attachmentId: Long): Attachment =
         attachmentRepository.findByIdAndDeleteFalse(attachmentId) ?: throw RuntimeException("未找到附件信息")
 
     /**
      * 获取实际文件
      */
+    @Transactional(readOnly = true)
     override fun getAttachmentFileStream(attachmentId: Long): InputStream =
         getAttachmentFileStream(getAttachment(attachmentId))
 
@@ -133,6 +140,7 @@ abstract class AttachmentStorageAdapter(
      * @param id       附件id
      * @param isDown   true 下载 false 预览
      */
+    @Transactional(readOnly = true)
     override fun download(response: HttpServletResponse, id: Long, isDown: Boolean) {
         val attachmentOptional = attachmentRepository.findById(id)
         val attachment = attachmentOptional.orElseThrow { RuntimeException("File not found") }
@@ -152,6 +160,7 @@ abstract class AttachmentStorageAdapter(
         }
     }
 
+    @Transactional
     override fun save(
         readOnly: Boolean,
         module: String,

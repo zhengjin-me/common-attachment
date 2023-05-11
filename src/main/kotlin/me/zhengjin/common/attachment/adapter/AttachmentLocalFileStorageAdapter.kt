@@ -6,6 +6,7 @@ import me.zhengjin.common.attachment.controller.vo.AttachmentVO
 import me.zhengjin.common.attachment.po.Attachment
 import me.zhengjin.common.attachment.po.AttachmentModelHelper
 import me.zhengjin.common.attachment.repository.AttachmentRepository
+import org.springframework.transaction.annotation.Transactional
 import java.io.InputStream
 import java.nio.file.Paths
 import java.util.Objects
@@ -42,6 +43,7 @@ open class AttachmentLocalFileStorageAdapter(
      * @param fileSize          文件大小(字节)
      * @param readOnly          附件是否只读 仅能预览 不能下载
      */
+    @Transactional
     override fun saveFiles(
         file: InputStream,
         module: String,
@@ -73,7 +75,7 @@ open class AttachmentLocalFileStorageAdapter(
         // 自动关闭流
         FileUtil.writeFromStream(file, Paths.get(storagePath.toString(), fileName).toFile())
 
-        return super.save(
+        return save(
             readOnly = readOnly,
             module = module,
             businessTypeCode = businessTypeCode,

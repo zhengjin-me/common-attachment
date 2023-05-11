@@ -35,6 +35,7 @@ interface AttachmentStorage {
     /**
      * 合并分片数据
      */
+    @Transactional
     fun completeMultipartUpload(vo: CompleteMultipartUploadRequestVO): AttachmentVO {
         TODO("Not yet implemented")
     }
@@ -99,6 +100,7 @@ interface AttachmentStorage {
      * 对外查询
      * 查询附件列表
      */
+    @Transactional(readOnly = true)
     fun list(
         module: String,
         pkId: Long?,
@@ -186,11 +188,13 @@ interface AttachmentStorage {
     /**
      * 获取实际文件
      */
+    @Transactional(readOnly = true)
     fun getAttachmentFileStream(attachmentId: Long): InputStream
 
     /**
      * 获取文件流 无本地存储的文件必须实现此接口!!!!!
      */
+    @Transactional(readOnly = true)
     fun getAttachmentFileStream(attachment: Attachment): InputStream
 
     /**
